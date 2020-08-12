@@ -32,8 +32,6 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.microedition.khronos.opengles.GL10;
-
 public class Firebase extends GodotPlugin {
 
     // private static Activity activity = null;
@@ -387,10 +385,4 @@ public class Firebase extends GodotPlugin {
         layout = new FrameLayout(activity);
         return layout;
     }
-
-    public void onGLDrawFrame(GL10 gl) {
-    }
-
-    public void onGLSurfaceChanged(GL10 gl, int width, int height) {
-    } // Singletons will always miss first 'onGLSurfaceChanged' call.
 }
