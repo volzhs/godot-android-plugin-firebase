@@ -23,23 +23,26 @@ import com.google.firebase.FirebaseApp;
 import com.google.firebase.analytics.FirebaseAnalytics;
 
 import org.godotengine.godot.Dictionary;
+import org.godotengine.godot.Godot;
 
 public class Analytics {
 
-    private static Activity activity = null;
+    private Activity activity = null;
     private static Analytics instance = null;
+    private final Godot godot;
 
     private FirebaseApp firebaseApp = null;
     private FirebaseAnalytics firebaseAnalytics = null;
 
-    public Analytics(Activity activity) {
-        this.activity = activity;
+    public Analytics(Godot godot) {
+        this.godot = godot;
+        this.activity = godot.getActivity();
     }
 
-    public static Analytics getInstance(Activity activity) {
+    public static Analytics getInstance(Godot godot) {
         if (instance == null) {
             synchronized (Analytics.class) {
-                instance = new Analytics(activity);
+                instance = new Analytics(godot);
             }
         }
 

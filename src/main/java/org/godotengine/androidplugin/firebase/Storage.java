@@ -36,20 +36,23 @@ import java.io.File;
 
 public class Storage {
 
-    private static Activity activity = null;
+    private Activity activity = null;
     private static Storage instance = null;
     private static FirebaseApp firebaseApp = null;
     private static FirebaseStorage firebaseStorage = null;
+    private final Godot godot;
     private UploadTask uploadTask = null;
     private GodotIO godotIo = null;
 
-    public Storage(Activity activity) {
-        this.activity = activity;
+    public Storage(Godot godot)
+    {
+        this.godot = godot;
+        this.activity = godot.getActivity();
     }
 
-    public static Storage getInstance(Activity activity) {
+    public static Storage getInstance(Godot godot) {
         if (instance == null) {
-            instance = new Storage(activity);
+            instance = new Storage(godot);
         }
 
         return instance;
@@ -65,7 +68,7 @@ public class Storage {
     }
 
     public void upload(String fileName) {
-        if (!isInitialized() || Authentication.getInstance(activity).getCurrentUser() == null) {
+        if (!isInitialized() || Authentication.getInstance(godot).getCurrentUser() == null) {
             Utils.callScriptFunc("Storage", "upload", "userNotSignedIn");
             return;
         }
@@ -97,7 +100,7 @@ public class Storage {
     }
 
     public void download(String fileName) {
-        if (!isInitialized() || Authentication.getInstance(activity).getCurrentUser() == null) {
+        if (!isInitialized() || Authentication.getInstance(godot).getCurrentUser() == null) {
             Utils.callScriptFunc("Storage", "download", "userNotSignedIn");
             return;
         }

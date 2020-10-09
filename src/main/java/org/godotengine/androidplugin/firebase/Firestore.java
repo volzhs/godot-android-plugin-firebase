@@ -20,29 +20,39 @@ import android.app.Activity;
 
 import androidx.annotation.NonNull;
 
-import com.google.android.gms.tasks.*;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.FirebaseApp;
-import com.google.firebase.firestore.*;
+import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.QuerySnapshot;
+import com.google.firebase.firestore.SetOptions;
 
 import org.godotengine.godot.Dictionary;
+import org.godotengine.godot.Godot;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 public class Firestore {
 
-    private static Activity activity = null;
+    private Activity activity = null;
     private static Firestore instance = null;
+    private final Godot godot;
     private FirebaseFirestore firebaseFirestore = null;
     private int scriptCallbackId = -1;
     private FirebaseApp firebaseApp = null;
 
-    public Firestore(Activity activity) {
+    public Firestore(Godot godot) {
+        this.godot = godot;
         this.activity = activity;
     }
 
-    public static Firestore getInstance(Activity activity) {
+    public static Firestore getInstance(Godot godot) {
         if (instance == null) {
-            instance = new Firestore(activity);
+            instance = new Firestore(godot);
         }
 
         return instance;

@@ -108,7 +108,7 @@ public class Firebase extends GodotPlugin {
         godot.runOnUiThread(new Runnable() {
             public void run() {
                 String fileName = "res://godot-firebase-config.json";
-                String data = Utils.readFromFile(fileName, godot);
+                String data = Utils.readFromFile(fileName, godot.getContext());
                 data = data.replaceAll("\\s+", "");
                 if (data == null || data.isEmpty()) {
                     Utils.logDebug("read data null or empty? " + data);
@@ -126,7 +126,7 @@ public class Firebase extends GodotPlugin {
         Utils.logDebug("Firebase initializing");
 
         JSONObject config = null;
-        firebaseApp = FirebaseApp.initializeApp(godot);
+        firebaseApp = FirebaseApp.initializeApp(godot.getContext());
 
         if (data.length() <= 0) {
             Utils.logDebug("Firebase initialized.");
@@ -155,6 +155,7 @@ public class Firebase extends GodotPlugin {
         // ===== Authentication
         if (config.optBoolean("Authentication", false)) {
             Utils.logDebug("Authentication initializing");
+//            Authentication.getInstance(godot).init(firebaseApp);
             Authentication.getInstance(godot).init(firebaseApp);
         }
 

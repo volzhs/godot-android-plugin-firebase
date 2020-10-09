@@ -23,7 +23,14 @@ import android.view.View;
 import android.widget.FrameLayout;
 
 import androidx.annotation.NonNull;
-import com.google.android.gms.ads.*;
+
+import com.google.android.gms.ads.AdError;
+import com.google.android.gms.ads.AdListener;
+import com.google.android.gms.ads.AdRequest;
+import com.google.android.gms.ads.AdSize;
+import com.google.android.gms.ads.AdView;
+import com.google.android.gms.ads.InterstitialAd;
+import com.google.android.gms.ads.MobileAds;
 import com.google.android.gms.ads.rewarded.RewardItem;
 import com.google.android.gms.ads.rewarded.RewardedAd;
 import com.google.android.gms.ads.rewarded.RewardedAdCallback;
@@ -32,6 +39,7 @@ import com.google.firebase.FirebaseApp;
 
 import org.godotengine.godot.BuildConfig;
 import org.godotengine.godot.Dictionary;
+import org.godotengine.godot.Godot;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
@@ -41,9 +49,10 @@ import java.util.List;
 
 public class AdMob {
 
-    private static Activity activity = null;
+    private Activity activity = null;
     private static AdMob instance = null;
     private static Dictionary rewardedMetaData = null;
+    private final Godot godot;
     FrameLayout layout = null;
     private boolean rewardedVideoLoaded = false;
     private boolean bannerLoaded = false;
@@ -54,13 +63,14 @@ public class AdMob {
     private FirebaseApp firebaseApp = null;
     private JSONObject adMobConfig = null;
 
-    private AdMob(Activity activity) {
-        this.activity = activity;
+    private AdMob(Godot godot) {
+        this.godot = godot;
+        this.activity = godot.getActivity();
     }
 
-    public static AdMob getInstance(Activity p_activity) {
+    public static AdMob getInstance(Godot godot) {
         if (instance == null) {
-            instance = new AdMob(p_activity);
+            instance = new AdMob(godot);
         }
 
         return instance;
@@ -369,8 +379,9 @@ public class AdMob {
             }
 
             @Override
-            public void onRewardedAdFailedToShow(int errorCode) {
+            public void onRewardedAdFailedToShow(AdError error) {
                 // Left empty for now.
+//                error.getCode();
             }
         };
 

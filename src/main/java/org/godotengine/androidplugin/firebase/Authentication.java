@@ -18,6 +18,7 @@ package org.godotengine.androidplugin.firebase;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -29,19 +30,25 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.GetTokenResult;
 
+import org.godotengine.godot.Godot;
+
 public class Authentication {
 
     private static Activity activity = null;
     private static Authentication instance = null;
     private FirebaseApp firebaseApp = null;
+    private Godot godot;
 
-    public Authentication(Activity activity) {
-        this.activity = activity;
+    public Authentication(Godot godot)
+    {
+        this.godot = godot;
+        this.activity = godot.getActivity();
     }
 
-    public static Authentication getInstance(Activity activity) {
+    public static Authentication getInstance(Godot godot) {
         if (instance == null) {
-            instance = new Authentication(activity);
+            Log.d("godot", "getInstance: make new");
+            instance = new Authentication(godot);
         }
 
         return instance;
@@ -49,7 +56,7 @@ public class Authentication {
 
     public void init(FirebaseApp firebaseApp) {
         this.firebaseApp = firebaseApp;
-        AuthenticationGoogle.getInstance(activity).init();
+        AuthenticationGoogle.getInstance(godot).init();
 
         Utils.logDebug("Authentication initialized");
     }
@@ -59,7 +66,7 @@ public class Authentication {
             return;
         }
 
-        AuthenticationGoogle.getInstance(activity).signIn();
+        AuthenticationGoogle.getInstance(godot).signIn();
     }
 
     public void signOut() {
@@ -67,7 +74,7 @@ public class Authentication {
             return;
         }
 
-        AuthenticationGoogle.getInstance(activity).signOut();
+        AuthenticationGoogle.getInstance(godot).signOut();
     }
 
     public String getUserDetails() {
@@ -75,8 +82,8 @@ public class Authentication {
             return "null";
         }
 
-        if (AuthenticationGoogle.getInstance(activity).isConnected()) {
-            return AuthenticationGoogle.getInstance(activity).getUserDetails();
+        if (AuthenticationGoogle.getInstance(godot).isConnected()) {
+            return AuthenticationGoogle.getInstance(godot).getUserDetails();
         }
 
         return "null";
@@ -106,6 +113,27 @@ public class Authentication {
         });
     }
 
+    /*
+    public void refresh() {
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+
+        if (user == null || mLastAuthCredential == null) return;
+
+        Task<Void> task = user.reauthenticate(mLastAuthCredential);
+        task.addOnCompleteListener(new OnCompleteListener<Void>() {
+            @Override
+            public void onComplete(@NonNull Task<Void> task) {
+                if (task.isSuccessful()) {
+                    Log.e("auth", "refresh success");
+                    gettingToken();
+                } else {
+                    Log.e("auth", "refresh fail");
+                }
+            }
+        });
+    }
+     */
+
     @Nullable
     public FirebaseUser getCurrentUser() {
         if (!isInitialized()) {
@@ -119,7 +147,7 @@ public class Authentication {
 
         boolean isConnected = false;
 
-        isConnected = AuthenticationGoogle.getInstance(activity).isConnected();
+        isConnected = AuthenticationGoogle.getInstance(godot).isConnected();
 
         return isConnected;
     }
@@ -133,11 +161,12 @@ public class Authentication {
     }
 
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        Log.d("godot", "onActivityResult");
         if (!isInitialized()) {
             return;
         }
 
-        AuthenticationGoogle.getInstance(activity).onActivityResult(requestCode, resultCode, data);
+        AuthenticationGoogle.getInstance(godot).onActivityResult(requestCode, resultCode, data);
     }
 
     public void onStart() {
@@ -159,6 +188,6 @@ public class Authentication {
             return;
         }
 
-        AuthenticationGoogle.getInstance(activity).onStop();
+        AuthenticationGoogle.getInstance(godot).onStop();
     }
 }

@@ -27,20 +27,24 @@ import com.google.firebase.iid.FirebaseInstanceId;
 import com.google.firebase.iid.InstanceIdResult;
 import com.google.firebase.messaging.FirebaseMessaging;
 
+import org.godotengine.godot.Godot;
+
 public class CloudMessaging {
 
-    private static Activity activity = null;
+    private Activity activity = null;
     private static CloudMessaging instance = null;
+    private final Godot godot;
     private FirebaseApp firebaseApp = null;
     private String token = "";
 
-    public CloudMessaging(Activity activity) {
+    public CloudMessaging(Godot godot) {
+        this.godot = godot;
         this.activity = activity;
     }
 
-    public static CloudMessaging getInstance(Activity activity) {
+    public static CloudMessaging getInstance(Godot godot) {
         if (instance == null) {
-            instance = new CloudMessaging(activity);
+            instance = new CloudMessaging(godot);
         }
 
         return instance;

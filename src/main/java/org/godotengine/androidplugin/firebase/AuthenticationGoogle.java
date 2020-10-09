@@ -18,8 +18,6 @@ package org.godotengine.androidplugin.firebase;
 
 import android.app.Activity;
 import android.content.Intent;
-import android.content.IntentSender.SendIntentException;
-import android.os.Bundle;
 
 import androidx.annotation.NonNull;
 
@@ -27,37 +25,42 @@ import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInClient;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
-import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.ApiException;
-import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
-import com.google.firebase.auth.*;
+import com.google.firebase.auth.AuthCredential;
+import com.google.firebase.auth.AuthResult;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.auth.GetTokenResult;
+import com.google.firebase.auth.GoogleAuthProvider;
 
+import org.godotengine.godot.Godot;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-public class AuthenticationGoogle implements GoogleApiClient.OnConnectionFailedListener, GoogleApiClient.ConnectionCallbacks {
+public class AuthenticationGoogle {
 
     private static final int RC_SIGN_IN = 9001;
 
-    private static Activity activity = null;
+    private Activity activity = null;
     private static AuthenticationGoogle instance = null;
     private static GoogleSignInClient googleSignInClient = null;
+    private final Godot godot;
     private FirebaseAuth auth;
     private JSONObject currentGoogleUser = new JSONObject();
     private boolean isGooglePlayConnected = false;
-    private boolean isResolvingConnectionFailure = false;
-    private boolean isRequestingSignIn = false;
-    private Boolean isIntentInProgress = false;
 
-    public AuthenticationGoogle(Activity activity) {
-        this.activity = activity;
+    public AuthenticationGoogle(Godot godot)
+    {
+        this.godot = godot;
+        this.activity = godot.getActivity();
     }
 
-    public static AuthenticationGoogle getInstance(Activity activity) {
+    public static AuthenticationGoogle getInstance(Godot godot) {
         if (instance == null) {
-            instance = new AuthenticationGoogle(activity);
+            instance = new AuthenticationGoogle(godot);
         }
 
         return instance;
@@ -70,11 +73,12 @@ public class AuthenticationGoogle implements GoogleApiClient.OnConnectionFailedL
                 .build();
 
         googleSignInClient = GoogleSignIn.getClient(activity, gso);
+//        googleSignInClient.silentSignIn();
 
         Utils.logDebug("AuthenticationGoogle initialized");
 
         auth = FirebaseAuth.getInstance();
-        if (auth != null && auth.getCurrentUser() != null) {
+        if (auth.getCurrentUser() != null) {
             signIn();
         }
     }
@@ -85,7 +89,7 @@ public class AuthenticationGoogle implements GoogleApiClient.OnConnectionFailedL
         }
 
         Intent singInIntent = googleSignInClient.getSignInIntent();
-        activity.startActivityForResult(singInIntent, RC_SIGN_IN);
+        godot.startActivityForResult(singInIntent, RC_SIGN_IN);
     }
 
     public void signOut() {
@@ -108,20 +112,34 @@ public class AuthenticationGoogle implements GoogleApiClient.OnConnectionFailedL
     }
 
     private void successSignIn(FirebaseUser user) {
-        isResolvingConnectionFailure = false;
         isGooglePlayConnected = true;
-        isRequestingSignIn = false;
 
         try {
             currentGoogleUser.put("uid", user.getUid());
             currentGoogleUser.put("name", user.getDisplayName());
             currentGoogleUser.put("email", user.getEmail());
             currentGoogleUser.put("photo_uri", user.getPhotoUrl());
+
+            Task<GetTokenResult> result = user.getIdToken(false);
+            result.addOnSuccessListener(new OnSuccessListener<GetTokenResult>() {
+                @Override
+                public void onSuccess(GetTokenResult getTokenResult) {
+                    String token = getTokenResult.getToken();
+                    String provider = getTokenResult.getSignInProvider();
+                    try {
+                        currentGoogleUser.put("token", token);
+                        currentGoogleUser.put("provider", provider);
+                    } catch (JSONException e) {
+                        Utils.logDebug("AuthenticationGoogle successSignIn() JSONException " + e.toString());
+                    }
+                    Utils.callScriptFunc("Authentication", "Google", "true");
+                }
+            });
         } catch (JSONException e) {
             Utils.logDebug("AuthenticationGoogle successSignIn() JSONException " + e.toString());
         }
 
-        Utils.callScriptFunc("Authentication", "Google", "true");
+//        Utils.callScriptFunc("Authentication", "Google", "true");
     }
 
     private void successSignOut() {
@@ -145,36 +163,6 @@ public class AuthenticationGoogle implements GoogleApiClient.OnConnectionFailedL
 
             }
         });
-    }
-
-    @Override
-    public void onConnected(Bundle bundle) {
-        // Left empty for now.
-    }
-
-    @Override
-    public void onConnectionSuspended(int cause) {
-        // Left empty for now.
-    }
-
-    @Override
-    public void onConnectionFailed(@NonNull ConnectionResult result) {
-        if (isResolvingConnectionFailure) {
-            return;
-        }
-
-        if (!isIntentInProgress & result.hasResolution()) {
-            try {
-                isIntentInProgress = true;
-
-                activity.startIntentSenderForResult(result.getResolution().getIntentSender(), RC_SIGN_IN, null, 0, 0, 0);
-            } catch (SendIntentException e) {
-                isIntentInProgress = false;
-                signIn();
-            }
-        }
-
-        isResolvingConnectionFailure = true;
     }
 
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
